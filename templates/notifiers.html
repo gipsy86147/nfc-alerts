@@ -1,0 +1,43 @@
+{%extends 'base.html'%} {%block leftnav%}
+<li class="active"><a href="/notifiers">Notifiers</a>
+<li><a href="/settings">Settings</a>
+</li>
+{%endblock%} {%block container%}
+<div class="row">
+
+	<div class="span6">
+		<h1>Notifiers</h1>
+		<table class="table table-bordered table-striped">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Alert Email</th>
+					<th>Recipients</th>
+					<th></th>
+					<th></th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				{%for alert in alerts%}
+				<tr>
+					<td>{{alert.name}}</td>
+					<td>{{alert.alert_email}}</td>
+					<td><a href="/notifiers/{{alert.key().id()}}/recipients">{{alert.recipients.count()}} recipient(s)</a></td>
+					<td><a href="/notifiers/edit?id={{alert.key().id()}}"
+						class="btn btn-link">Edit</a></td>
+					<td><a href="/delete?key={{alert.key()}}"
+						class="btn btn-link" onclick="return confirm('Are you sure?')">Delete</a></td>
+					<td><a href="/notifiers/{{alert.key().id()}}/reports">Report</a>
+					</td>
+				</tr>
+				{%endfor%}
+			</tbody>
+		</table>
+		<p>
+			<a href="/notifiers/new" class="btn btn-primary">New Notifier</a>
+		</p>
+	</div>
+</div>
+
+{%endblock%}

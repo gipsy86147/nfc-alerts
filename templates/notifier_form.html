@@ -1,0 +1,270 @@
+{%extends 'base.html'%} {%block leftnav%}
+<li class="active"><a href="/notifiers">Notifiers</a>
+<li><a href="/settings">Settings</a></li>
+{%endblock%} {%block container%}
+
+<form method="post">
+	<div class="row">
+		<div class="span6">
+			<fieldset>
+				<legend>{{notif.name or 'New Notifier'}} Phone </legend>
+				<div class="row">
+					<div class="span3">
+					<label class="checkbox"> {{form.phone_alert_enabled}} Enable Phone Alerts </label>
+						<div class="control-group {%if form.name.errors %}error{%endif%}">
+							<label>Notifier name</label> {{form.name(required='required')}}
+						</div>
+						<div
+							class="control-group {%if form.from_email.errors %}error{%endif%}">
+							<label>From email</label>{{form.from_email(required='required')}}
+							{%if form.from_email.errors%} <span class="help-block">{{form.from_email.errors[0]}}
+							</span> {%endif%}
+						</div>
+						<div class="control-group">
+							<label>Message</label>
+							{{form.phone_custom_message(class="span3")}} <span
+								class="help-block">This message will be readout first on
+								an alert. </span>
+						</div>
+						<label class="checkbox"> {{form.readout_email_body}} Also
+							include email body in the message </label>
+							
+					</div>
+					{%if notif%}
+					<div class="span6">
+					<fieldset>
+					<legend>Recipients</legend>
+					<a href="/notifiers/{{notif.key().id()}}/recipients">Add Recipients</a>
+					<table class="table table-bordered">
+					<tbody>
+					{%for recipient in notif.recipients%}
+					<tr>
+					<td>{{recipient.phone_number}}</td><td>{{recipient.phone_type}}</td><td>{{recipient.name}}</td><td>{{recipient.email}}</td>
+					</tr>
+					{%endfor%}
+					</tbody>
+					</table>
+					
+					</fieldset>
+					</div>
+					{%endif%}
+					<div class="span3">
+						<div
+							class="control-group {%if form.subject_pattern.errors %}error{%endif%}">
+							<label>Incoming subject pattern</label>
+							{{form.subject_pattern}} <span
+								class="help-block">Subject pattern to match to trigger
+								alert </span>
+						</div>
+					</div>
+				</div>
+			</fieldset>
+		</div>
+		<div class="span6">
+			<div class="row">
+				<div class="span3">
+					<fieldset>
+						<div class="control-group">
+							<label class="checkbox"> {{form.sms_enabled}} Enable SMS
+							</label>
+						</div>
+						<legend>{{notif.name or 'New Notifier'}} SMS </legend>
+						<div class="control-group {%if form.sms_message.errors %}error{%endif%}">
+							<label>SMS Message</label> {{form.sms_message(_class="span6")}}
+							{%if form.sms_message.errors%} <span class="help-block">{{form.sms_message.errors[0]}}
+							</span> {%endif%}
+						</div>
+
+					</fieldset>
+				</div>
+			</div>
+			<div class="row">
+				<div class="span6">
+					<fieldset>
+						<legend>Alert Start and End</legend>
+						<div class="control-group inline">
+							<label>Alert start</label> {{form.time_start}} <label>Alert
+								end</label> {{form.time_end}}
+
+						</div>
+					</fieldset>
+				</div>
+			</div>
+			{%if notif%}
+			<div class="row">
+				<div class="span3">
+					<fieldset>
+						<legend>No Alert Time Windows</legend>
+						<table class="table table-bordered">
+							<thead>
+								<tr><th>Start</th><th>End</th><th></th></tr>
+							</thead>
+							<tbody id="noAlertWindows">
+
+							</tbody>
+						</table>
+						<a href="#" onClick="showForm()">Add new</a>
+					</fieldset>
+				</div>
+			</div>
+			{%endif%}
+
+		</div>
+	</div>
+	<div class="row">
+		<div class="span6">
+			<p>
+				<button type="submit" class="btn btn-primary">{%if
+					notif%}Save{%else%}Create Notifier{%endif%}</button>
+				<a href="/notifiers" class="btn">Cancel</a>
+			</p>
+		</div>
+	</div>
+</form>
+<div id="noAlertWindowsForm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="myModalLabel">Add New No Alert Window</h3>
+  </div>
+  <div class="modal-body">
+    <form>
+  <fieldset>
+    <label>Start</label>
+    <select name="start" id="start">
+    	{%for item in hours_list%}
+    	<option value="{{item[0]}}">{{item[1]}}</option>
+    	{%endfor%}
+    </select>
+    <label>End</label>
+    <select name="end" id="end">
+    	{%for item in hours_list%}
+    	<option value="{{item[0]}}">{{item[1]}}</option>
+    	{%endfor%}
+    </select>
+    {%if notif %}
+    <input type="hidden" name="notif_id" id="notif_id" value="{{notif.key().id()}}">
+    {%endif%}
+  </fieldset>
+</form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+    <button class="btn btn-primary" onClick="addNoAlertWindow()">Add</button>
+  </div>
+</div>
+
+{%endblock%}
+{%block scripts%}
+{%if notif%}
+<script type="text/javascript">
+function showForm(){
+
+	$('#noAlertWindowsForm').modal({
+		backdrop: "static",
+	    show: true,
+	    keyboard: true
+  	});
+
+}
+
+function fillNoAlertWindowsList(data){
+
+	var noAlertWindows = data.noAlertWindows;
+	$('#noAlertWindows').empty();
+
+	for (var i = noAlertWindows.length - 1; i >= 0; i--) {
+		var noalertwindow = noAlertWindows[i];
+		var tr = $('<tr></tr>');
+		var start_td = $('<td></td>').text(noalertwindow.start+':00');
+		var end_td = $('<td></td>').text(noalertwindow.end +':00');
+		
+
+		var delte_button = $("<button type='button' class='btn btn-link'></button>")
+		  .data("item_data", noalertwindow)
+		  .text("Delete")
+	      .bind('click', function() {
+	    	if(confirm('Are you sure?')){
+		        $.ajax({
+		        	url:'/delete?key='+$(this).data("item_data").key,
+		        	type:'GET',
+		        	success:function(data){
+		        		getNoAlertWindows();
+
+		        	}
+
+		        });
+	    	}
+
+	      });
+	      var del_td = $('<td></td>').append(delte_button);
+		tr.append(start_td).append(end_td).append(del_td);
+		$('#noAlertWindows').append(tr);
+
+
+	}
+
+
+}
+
+function getNoAlertWindows(){
+	$.ajax({
+		url:'/notifiers/{{notif.key().id()}}/noAlertWindows',
+		type:'GET',
+		cache:false,
+		success:function(data){
+			if(data.status == 'success'){
+				fillNoAlertWindowsList(data);
+				$('#noAlertWindowsForm').modal('hide');
+			}
+
+		},
+		error:function(err){
+
+		}
+
+	});
+}
+function addNoAlertWindow(){
+	var info ={};
+	info.start = $('#start').val();
+	info.end = $('#end').val();
+	info.notif_id = $('#notif_id').val();
+	$.ajax({
+		url:'/notifiers/{{notif.key().id()}}/noAlertWindows',
+		type:'POST',
+		data:info,
+		cache:false,
+		success:function(data){
+			if(data.status=='success'){
+				getNoAlertWindows();
+			}
+
+		},
+		error:function(err){
+
+		}
+
+	});
+}
+function deleteNoAlertWindow(key){
+	var info = {};
+	info.key = key;
+	$.ajax({
+		url:'/delete',
+		data:info,
+		success:function(data){
+
+		},
+		error:function(err){
+			getNoAlertWindows();
+		}
+
+	});
+}
+
+$(document).ready(function() {
+  getNoAlertWindows();
+});
+{%endif%}
+</script>
+{%endblock%}

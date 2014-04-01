@@ -1,0 +1,80 @@
+{%extends 'base.html'%} {%block leftnav%}
+<li><a href="/notifiers">Notifiers</a>
+<li class="active"><a href="/settings">Settings</a></li>
+{%endblock%} {%block container%}
+<div class="row">
+	<form method="post">
+		<div class="span6">
+
+			<div class="row">
+				<div class="span3">
+					<fieldset>
+						<legend>Twilio Settings</legend>
+						<div class="control-group">
+							<label>Account Sid</label>
+							{{form.account_sid(required='required')}} {%if
+							form.account_sid.errors%} <span class="help-block">{{form.account_sid.errors[0]}}</span>
+							{%endif%}
+						</div>
+						<div class="control-group">
+							<label>Auth Code</label> {{form.auth_code(required='required')}}
+							{%if form.auth_code.errors%} <span class="help-block">{{form.auth_code.errors[0]}}</span>
+							{%endif%}
+						</div>
+						<div class="control-group">
+							<label>Twilio Number</label>
+							{{form.twilio_number(required='required')}} {%if
+							form.twilio_number.errors%} <span class="help-block">{{form.twilio_number.errors[0]}}</span>
+							{%endif%}
+						</div>
+					</fieldset>
+				</div>
+				<div class="span3">
+					<fieldset>
+						<legend>Time Zone</legend>
+						<div class="control-group">
+							<label>Time zone</label> {{form.tz(required='required')}} {%if
+							form.tz.errors%} <span class="help-block">{{form.tz.errors[0]}}</span>
+							{%endif%}
+						</div>				
+					</fieldset>
+				</div>
+				<div class="span3">
+					<fieldset>
+						<legend>SMS Timeout</legend>
+						<div class="control-group">
+							<label>Timeout in seconds</label> {{form.sms_timeout(required='required')}} {%if
+							form.sms_timeout.errors%} <span class="help-block">{{form.sms_timeout.errors[0]}}</span>
+							{%endif%}
+						</div>				
+					</fieldset>
+				</div>
+				<div class="span3">
+					<p>
+						<button type="submit" class="btn btn-primary">Save</button>
+					</p>
+				</div>
+
+			</div>
+
+		</div>
+
+	</form>
+	{%if settings.alert_enabled == True %}
+	<div class="span3">
+		<div class="alert alert-block alert-success fade in">
+			
+			<p>
+			<form action="/alertEnable?enable_desable=desable" method="post">
+			<fieldset>
+			<legend>Alerts Are Enabled</legend>
+				<button type="submit" class="btn btn-danger pull-right">Pause Alerts
+					Now</button>
+			</fieldset>
+			</form>
+		</div>
+	</div>
+	{%endif%}
+</div>
+
+{%endblock%}

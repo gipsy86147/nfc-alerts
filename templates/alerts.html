@@ -1,0 +1,74 @@
+{%extends 'base.html'%} {%block leftnav%}
+<li class="active"><a href="/notifiers">Notifiers</a>
+<li><a href="/settings">Settings</a>
+</li>
+{%endblock%} {%block container%}
+<div class="row">
+	<div class="span12">
+		<table class="table table-bordered table-striped">
+			<thead>
+				<tr>
+					<th>Created</th><th>Alert Email Body</th><th>Notifier</th><th>Loop count</th>
+					<th>Status</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				{%for alert in notif.alerts.order('-created')%}
+				<tr>
+					<td>{{alert.created}}</td><td>{{alert.email_body}}</td><td>{{alert.notifier.name}}</td><td>{{alert.loop_count}}</td>
+					<td>{{alert.status}}</td>
+					<td><a href="#" class="button button-link" onclick="show({{alert.key().id()}})">Trace</a>
+						<input type="hidden" value="{{alert.get_traces_json()}}" id="{{alert.key().id()}}">
+					</td>
+
+				</tr>
+				{%endfor%}
+			</tbody>
+		</table>
+	</div>
+</div>
+<div id="tracePanel" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="myModalLabel">Alert Trace</h3>
+  </div>
+  <div class="modal-body">
+  	<table class="table table-striped table-bordered">
+  		<tbody id="traceBody">
+
+  		</tbody>
+
+  	</table>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+  </div>
+</div>
+{%endblock%}
+{%block scripts%}
+<script type="text/javascript">
+function show(id){
+	var alerts = JSON.parse($('#'+id).val());
+    $('#traceBody').empty();
+	for (var i = alerts.length - 1; i >= 0; i--) {
+		var alert = alerts[i]
+		var tr = $('<tr></tr>');
+		var date_td = $('<td></td>').text(moment(alert.created).format('MM/DD/YY h:mm:ss'));
+		var log_td = $('<td></td>').text(alert.event_log);
+		tr.append(date_td).append(log_td);
+		$('#traceBody').append(tr);
+
+	}
+
+	$('#tracePanel').modal({
+		backdrop: "static",
+	    show: true,
+	    keyboard: true
+  	});
+
+
+}
+</script>
+{%endblock%}
+

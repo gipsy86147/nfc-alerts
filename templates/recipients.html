@@ -1,0 +1,200 @@
+{%extends 'base.html'%} {%block leftnav%}
+<li class="active"><a href="/notifiers">Notifiers</a>
+<li><a href="/settings">Settings</a>
+</li>
+{%endblock%} {%block container%}
+<div class="row">
+
+	<div class="span6">
+		<h1>{{notif.name}} - Recipients</h1>
+		<table class="table table-bordered table-striped">
+			<thead>
+				<tr>
+					<th>Phone Number</th>
+					<th>Phone Type</th>
+					<th>Name</th>
+					<th>Email</th>
+					<th></th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody id="recipientsList">
+			</tbody>
+		</table>
+		<p>
+			<a href="#" role="button" class="btn btn-primary" onClick="show()">New Recipient</a>
+			<a href="/" class="btn btn-link">Back to Notifiers</a>
+		</p>
+	</div>
+</div>
+<div id="recipientForm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="myModalLabel">Add New Recipient</h3>
+  </div>
+  <div class="modal-body">
+    <form>
+  <fieldset>
+    <label>Phone Number</label>
+    <input type="text" placeholder="Phone number" id="phone_number" name="phone_number" required>
+    <label>Phone Type</label>
+    <select id="phoneType">
+    	<option value="land">Land Line</option>
+    	<option value="mobile">Mobile</option>
+    </select>
+    <label>Name</label>
+    <input type="text" placeholder="Name" id="name" name="name">
+    <label>Email</label>
+    <input type="text" placeholder="Email" id="email" name="email">
+    <input type="hidden" name="notif_id" id="notif_id" value="{{notif.key().id()}}">
+    <input type="hidden" name="recipient_id" id="recipient_id">
+
+  </fieldset>
+</form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+    <button class="btn btn-primary" onClick="addRecipient()" id="recipientAddButton">Add</button>
+  </div>
+</div>
+
+{%endblock%}
+{%block scripts%}
+<script>
+function show(){
+
+  $('#phone_number').val('');
+  $('#email').val('');
+  $('#name').val('');
+  $('#recipient_id').val('');
+  $('#phoneType').val('land');
+  $('#myModalLabel').text('New Recipient');
+  $('#recipientAddButton').text('Add')
+  
+  $('#recipientForm').modal({
+    backdrop: "static",
+    show: true,
+    keyboard: true
+  });
+}
+
+function addRecipient(){
+	var info = {};
+	info.phone_number = $('#phone_number').val();
+	info.name = $('#name').val();
+	info.email = $('#email').val()
+	info.recipient_id = $('#recipient_id').val()
+	info.phoneType = $('#phoneType').val();
+
+    var url = '/services/notifiers/' + $('#notif_id').val() + '/recipients'
+    var redirect_url = '/notifiers/' + $('#notif_id').val() + '/recipients'
+	$.ajax({
+		url:url,
+		type:'POST',
+		cache:false,
+		data:info,
+		success:function(data){
+
+			if(data.status=='success'){
+
+				$('#recipientForm').modal('hide');
+				getRecipients();
+			}
+
+			
+		},
+		error:function(err){
+
+		}
+
+	});
+}
+
+function getRecipients(){
+	$.ajax({
+		url:'/services/notifiers/' + $('#notif_id').val() + '/recipients',
+		type:'GET',
+		cache:false,
+		success:function(data){
+			if(data.status == 'success'){
+
+				fillRecipientsList(data);
+			}
+
+
+		},
+		error:function(err){
+
+		}
+
+	});
+}
+
+function fillRecipientsList(data){
+	$('#recipientsList').empty();
+	var recipients = data.recipients;
+	var notif_id = data.notif_id;
+	for(var i=0;i<recipients.length;i++){
+		var recipient = recipients[i];
+		var tr = $('<tr></tr>');
+		var phone_td = $('<td></td>').text(recipient.phone_number);
+		var phone_type_td = $('<td></td>').text(recipient.phone_type);
+		var name_td = $('<td></td>').text(recipient.name);
+		var email_td = $('<td></td>').text(recipient.email);
+		var edit_td = $('<td></td>');
+		var delte_td = $('<td></td>');
+		var edit_button = $("<button type='button' class='btn btn-link'></button>")
+		  .data("item_data", recipient)
+		  .text("Edit")
+	      .bind('click', function() {
+	        showEditForm($(this).data("item_data"));
+	      });
+	    edit_td.append(edit_button);
+	    var delete_button = $("<button type='button' class='btn btn-link'></button>")
+		  .data("item_data", recipient)
+		  .text("Delete")
+	      .bind('click', function() {
+	    	if(confirm('Are you sure?')){
+		        $.ajax({
+		        	url:'/delete?key='+$(this).data("item_data").key,
+		        	type:'GET',
+		        	success:function(data){
+		        		getRecipients();
+
+		        	}
+
+		        });
+	    	}
+
+	      });
+	      var del_td = $('<td></td>').append(delete_button);
+
+		tr.append(phone_td).append(phone_type_td).append(name_td).append(email_td).append(edit_td).append(del_td);
+		$('#recipientsList').append(tr);
+
+	}
+}
+
+function showEditForm(recipient){
+    $('#phone_number').val(recipient.phone_number);
+    $('#email').val(recipient.email);
+    $('#name').val(recipient.name);
+    $('#recipient_id').val(recipient.id);
+    $('#phoneType').val(recipient.phone_type);
+    $('#myModalLabel').text('Edit Recipient');
+    $('#recipientAddButton').text('Save')
+
+	$('#recipientForm').modal({
+    	backdrop: "static",
+    	show: true,
+    	keyboard: true
+  	});
+
+}
+
+$(document).ready(function() {
+  getRecipients();
+});
+
+</script>
+{%endblock%}
